@@ -1,0 +1,150 @@
+---
+title: "Group Project"
+author: "Group 3"
+date: "4/8/2022"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+### Data Entry
+```{r}
+resp <- c(10.87,7.81,11.25,10.33,
+          10.35,8.75,11.84,10.69,
+          10.3,8.31,11.82,10.31,
+          11.03,8.43,12.67,11.56,
+          11.3,9.26,12.52,10.95,
+          11.34,9.19,12.43,11.4)
+mentos <- rep(c(2,4),each=12)
+soda <- rep(c("Diet Coke","Coke"),12)
+temp <- rep(c("R","R","NR","NR"),6)
+```
+
+### Data Frame
+```{r include=FALSE}
+threeway=data.frame(resp=resp,A=factor(mentos),B=factor(soda),C=factor(temp))
+attach(threeway)
+```
+
+### Data Matrix
+```{r}
+datamat=matrix(resp,6,4,byrow=T)
+colnames(datamat)=c("B=Diet Coke, C=R","B=Coca-Cola, C=R",
+                    "B=Diet Coke, C=NR","B=Coca-Cola, C=NR")
+rownames(datamat)=c("A=2","","","A=4","","")
+datamat
+```
+
+### ANOVA Table
+```{r}
+outthree=aov(resp~A*B*C,threeway)
+summary(outthree)
+```
+
+\
+Using $\alpha=0.05$, we see that we have factors A, B and C are significant (if we only consider their p-values). We also see an interaction effect between factors B and C being significant. The other interactions aren't significant. 
+
+### Check Residuals
+```{r}
+fits=outthree$fitted		#same as fitted(junk_out)
+res=outthree$residuals	#same as residuals(junk_out)
+
+#Assumption Checking with Residual Plots
+par(mfrow=c(2,3))	#create 2 rows and two columns in graphics column
+qqnorm(res)
+qqline(res)
+plot(fits,res,xlab="Y-hat",ylab="Residuals",
+     main="Residuals vs. Fits")
+plot(res~mentos,vertical=T,xlab="A = Mentos",ylab="Residuals")
+stripchart(res~soda,vertical=T,xlab="Treatment",ylab="Anxiety",
+           main="Resids vs. Treatment")
+stripchart(res~temp,vertical=T,xlab="Treatment",ylab="Anxiety",
+           main="Resids vs. Treatment")
+par(mfrow=c(1,1))
+```
+
+\
+A is significant
+```{r}
+TukeyHSD(outthree, "A")
+```
+
+### Mean Matrix
+```{r}
+# Store means for explaining the interaction plots
+meanvec=numeric(8)
+count=1
+for(i in c(2,4)) {
+        for(k in c("R","NR")) {
+           for(j in c("Diet Coke","Coke")) {
+           meanvec[count]=  mean(resp[mentos==i & soda==j & temp==k]) 
+           count = count +1
+           }     
+        }
+}
+meanmat=matrix(meanvec,2,4,byrow=T)
+colnames(meanmat)=c("B=Diet Coke, C=R","B=Coca-Cola, C=R",
+                    "B=Diet Coke, C=NR","B=Coca-Cola, C=NR")
+rownames(meanmat)=c("A=2","A=4")
+meanmat
+```
+
+### Interaction Plots
+```{r}
+#two factor interactions
+par(mfrow=c(1,3))
+interaction.plot(A,B,resp,type="b",main="AB")
+interaction.plot(A,C,resp,type="b",main="AC")
+interaction.plot(B,C,resp,type="b",main="BC")
+par(mfrow=c(1,1))
+```
+
+Since B:C interaction is significant, we perform analysis on both. 
+```{r}
+b=2
+c=2
+n=3
+alpha=.05
+dfe=16
+mse=0.104
+Tq=qtukey(1-alpha/(b+c),b,dfe)/sqrt(2)
+tuk=numeric(2)
+tuknames=numeric(2)
+```
+
+### Contrast Comparison for B:C
+```{r}
+# The effect of B when C=R minus the effect of B when C=NR
+bc_ctrst = mean(resp[B=="Diet Coke"&C=="R"]) - mean(resp[B=="Coke"&C=="R"]) -  ( mean(resp[B=="Diet Coke"&C=="NR"]) - mean(resp[B=="Coke"&C=="NR"]) )
+se=sqrt(mse*4/6)
+mult=qt(1-alpha/3,dfe)
+me=mult*se
+c(bc_ctrst-me,bc_ctrst,bc_ctrst+me)
+```
+\
+We are 95% confident (at a family level) that the mean liquid loss of Soda-type (B) when it is refrigerated is between 0.41 and 1.64 ounces more than when it is not refrigerated. Therefore, we can say it better at displacing liquid.                     
+
+
+
+### Which Combo is best?
+```{r}
+model.tables(outthree,type="means")
+#shows that A=4, B=Diet Coke, C=NR is best closely followed by A=2, B=Diet Coke, C=NR
+```
+
+```{r}
+#Scheffe
+a=2; b=2; c=2; n=3
+sch=sqrt((a*b*c-1)*qf(1-alpha,a*b*c-1,dfe)) 
+a4b2c1=mean(with(threeway,resp[A==4&B=="Diet Coke"&C=="NR"]))
+a2b2c1=mean(with(threeway,resp[A==2&B=="Diet Coke"&C=="NR"]))
+pe=a4b2c1-a2b2c1
+se=sqrt(2*mse/n)
+c(pe-sch*se, pe, pe+sch*se)
+```
+\
+It isn't significantly more. 
