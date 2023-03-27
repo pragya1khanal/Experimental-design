@@ -9,6 +9,13 @@ Let's go!
 
 ![image](https://user-images.githubusercontent.com/111830763/228015564-de0af183-d08a-4973-bfbe-c33c3399ad62.png)
 
+Surprises
+
+![image](https://user-images.githubusercontent.com/111830763/228018400-b5daf751-e0f5-44e0-afd7-e76a00441120.png)
+
+![image](https://user-images.githubusercontent.com/111830763/228018650-bb8038d1-257b-4fdf-b1f8-0ef5e2a06f37.png)
+
+
 ANOVA 
 
 ![image](https://user-images.githubusercontent.com/111830763/228015664-ddc7f9eb-7393-4ed6-b1db-64aa91ef51c8.png)
